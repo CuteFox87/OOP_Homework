@@ -17,7 +17,7 @@ public class MyClient {
 			System.out.print("input: ");
 
 			while ((userInput = console.readLine()) != null) {
-				out.write(userInput.getBytes());
+				out.write((userInput+"\n").getBytes());
 				out.flush();
 				
 				byte[] buffer = new byte[1024];

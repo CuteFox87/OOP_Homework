@@ -1,5 +1,6 @@
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.Buffer;
 import java.io.*;
 
 
@@ -13,7 +14,7 @@ public class MyEchoServer {
 		catch(IOException e) {
 			System.out.println(e);
 		}
-		
+
 		while(true) {
 			try {
 				System.out.println("Waiting for client connection......");
@@ -22,14 +23,14 @@ public class MyEchoServer {
 				
 				InputStream in = socket.getInputStream();
 				OutputStream out = socket.getOutputStream();
-				
-				while ((in.read()) != -1) {
-					
-					byte[] buffer = new byte[1024];
-					int readBytes = in.read(buffer);
-					System.out.println("Client message: " + new String(buffer, 0, readBytes));
 
-					out.write(buffer, 0, readBytes);
+				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+				String message;
+				
+				while ((message = reader.readLine()) != null) {
+					
+					System.out.println("Client message: " + message);
+					out.write((message + "\n").getBytes());
 					out.flush();
 				}
 			} catch(IOException e) {
