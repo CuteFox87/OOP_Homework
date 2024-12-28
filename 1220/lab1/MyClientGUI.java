@@ -11,7 +11,7 @@ public class MyClientGUI extends JFrame {
 
     public MyClientGUI() {
         setTitle("MyClientGUI");
-        setSize(400, 400);
+        setSize(600, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // GUI components
