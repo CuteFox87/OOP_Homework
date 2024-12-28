@@ -5,13 +5,15 @@ import java.io.*;
 import java.net.*;
 
 public class MyClientGUI extends JFrame {
-    private DatagramSocket clientSocket;
-    private InetAddress serverAddress;
+    private Socket clientSocket;
+    private PrintWriter out;
+    private BufferedReader in;
+    private String serverHost = "localhost";
     private int serverPort = 8888;
 
     public MyClientGUI() {
         setTitle("MyClientGUI");
-        setSize(400, 400);
+        setSize(600, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // GUI components
@@ -70,13 +72,10 @@ public class MyClientGUI extends JFrame {
         if (message.isEmpty()) return;
 
         try {
-            byte[] sendBuffer = message.getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, serverAddress, serverPort);
-            clientSocket.send(sendPacket);
-
-            // Clear the text field
+            out.println(message);
+            out.flush();
             textField.setText("");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             textArea.append("Error communicating with server: " + ex.getMessage() + "\n");
         }
     }
@@ -103,27 +102,37 @@ public class MyClientGUI extends JFrame {
 
     private void initializeClient(JTextArea textArea) {
         try {
-            clientSocket = new DatagramSocket();
-            serverAddress = InetAddress.getByName("localhost");
-            textArea.append("Client initialized.\n");
+            clientSocket = new Socket(serverHost, serverPort);
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            textArea.append("Client initialized. Connected to server.\n");
 
             // Start a thread to listen for incoming messages
             new Thread(() -> {
                 try {
-                    byte[] receiveBuffer = new byte[1024];
-                    while (true) {
-                        DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
-                        clientSocket.receive(receivePacket);
-                        String response = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                        textArea.append("Server: " + response + "\n");
+                    String response;
+                    while ((response = in.readLine()) != null) {
+                        textArea.append(response + "\n");
                     }
                 } catch (IOException ex) {
-                    System.err.println("Error receiving data from server: " + ex.getMessage());
+                    textArea.append("Error receiving data from server: " + ex.getMessage() + "\n");
+                } finally {
+                    closeConnection();
                 }
             }).start();
 
-        } catch (SocketException | UnknownHostException ex) {
+        } catch (IOException ex) {
             textArea.append("Error initializing client: " + ex.getMessage() + "\n");
+        }
+    }
+
+    private void closeConnection() {
+        try {
+            if (clientSocket != null && !clientSocket.isClosed()) {
+                clientSocket.close();
+            }
+        } catch (IOException ex) {
+            System.err.println("Error closing connection: " + ex.getMessage());
         }
     }
 
